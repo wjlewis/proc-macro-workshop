@@ -15,14 +15,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
         let fields = data.fields.iter().map(|field| {
             let Field { ident, ty, .. } = field;
             quote! {
-                #ident: Option<#ty>
+                #ident: ::std::option::Option<#ty>
             }
         });
 
         let init_values = data.fields.iter().map(|field| {
             let Field { ident, .. } = field;
             quote! {
-                #ident: None
+                #ident: ::std::option::Option::None
             }
         });
 
@@ -30,7 +30,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
             let Field { ident, ty, .. } = field;
             quote! {
                 fn #ident(&mut self, #ident: #ty) -> &mut Self {
-                    self.#ident = Some(#ident);
+                    self.#ident = ::std::option::Option::Some(#ident);
                     self
                 }
             }
