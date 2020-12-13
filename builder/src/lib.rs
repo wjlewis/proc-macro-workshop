@@ -26,9 +26,23 @@ pub fn derive(input: TokenStream) -> TokenStream {
             }
         });
 
+        let setters = data.fields.iter().map(|field| {
+            let Field { ident, ty, .. } = field;
+            quote! {
+                fn #ident(&mut self, #ident: #ty) -> &mut Self {
+                    self.#ident = Some(#ident);
+                    self
+                }
+            }
+        });
+
         let expanded = quote! {
             pub struct #builder_ident {
                 #(#fields),*
+            }
+
+            impl #builder_ident {
+                #(#setters)*
             }
 
             impl #struct_ident {
