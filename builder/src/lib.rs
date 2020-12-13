@@ -36,6 +36,24 @@ pub fn derive(input: TokenStream) -> TokenStream {
             }
         });
 
+        let field_checks = data.fields.iter().map(|field| {
+            let Field { ident, .. } = field;
+            let message = format!(r#""{}" is required"#, ident.as_ref().unwrap());
+
+            quote! {
+                if self.#ident.is_none() {
+                    return ::std::result::Result::Err(#message.into());
+                }
+            }
+        });
+
+        let unwrapped = data.fields.iter().map(|field| {
+            let Field { ident, .. } = field;
+            quote! {
+                #ident: self.#ident.take().unwrap()
+            }
+        });
+
         let expanded = quote! {
             pub struct #builder_ident {
                 #(#fields),*
@@ -43,6 +61,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
             impl #builder_ident {
                 #(#setters)*
+
+                fn build(&mut self) -> Result<#struct_ident, Box<dyn ::std::error::Error>> {
+                    #(#field_checks)*
+
+                    Ok(#struct_ident {
+                        #(#unwrapped),*
+                    })
+                }
             }
 
             impl #struct_ident {
